@@ -18,7 +18,7 @@ class OEC:
         
         return df
 
-    def get_data(self, auth:bool, cube:str, drilldown:list, measure:list, cut:dict, token:Optional[str] = None):
+    def get_data(self, auth:bool, cube:str, drilldown:list, measure:list, cut:dict, token:Optional[str]):
         
         cuts = gen_cut(cut)
         drilldowns = gen_msr_dd(drilldown)
