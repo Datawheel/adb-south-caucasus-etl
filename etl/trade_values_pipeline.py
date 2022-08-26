@@ -9,53 +9,44 @@ from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.logger import logger
 
 
-class ProductStep(PipelineStep):
+class MembersStep(PipelineStep):
     def run_step(self, prev_result, params):
+        oec = OEC()
+        # Get members
+        # Years
+        years = oec.get_members(payload={'cube': 'trade_i_baci_a_92','level': 'Year'}).sort_values("id").reset_index(drop=True)['id']
+        # Countries
+        countries = oec.get_members(payload={'cube': 'trade_i_baci_a_92','level': 'Country'}).sort_values("id").reset_index(drop=True)['id']
+        return(years, countries)
+
+class TradeValuesStep(PipelineStep):
+    def run_step(self, prev_result, params):
+        # Unpack prev
+        years, countries = prev_result
 
         oec = OEC()
+        # years = ['2019','2020']
+        # countries = ['afago', 'euesp']
 
-        # HS2
-        payload_hs2 = {
-            'cube': 'trade_i_baci_a_92',
-            'level': 'HS2'
-        }
-        df_hs2 = oec.get_members(payload=payload_hs2)
-        df_hs2.columns = ['hs2','hs2_name']
+        years = ['1995']
+        countries = ['afago']
 
-        # HS4
-        payload_hs4 = {
-            'cube': 'trade_i_baci_a_92',
-            'level': 'HS4'
-        }
-        df_hs4 = oec.get_members(payload=payload_hs4)
-        df_hs4.columns = ['hs4','hs4_name']
 
-        # HS6
-        payload_hs6 = {
-            'cube': 'trade_i_baci_a_92',
-            'level': 'HS6'
-        }
-        df_hs6 = oec.get_members(payload=payload_hs6)
-        df_hs6.columns = ['hs6','hs6_name']
-
-        # Add columns to assist merge
-        df_hs4['hs2_aux'] = df_hs4['hs4'].apply(lambda id: int(str(id)[:-2]))
-        df_hs6['hs2_aux'] = df_hs6['hs6'].apply(lambda id: int(str(id)[:-4]))
-
-        # Final
-        df = pd.merge(left=df_hs6,right=df_hs4, left_on="hs2_aux", right_on="hs2_aux", how="left")
-        df = pd.merge(left=df,right=df_hs2, left_on="hs2_aux", right_on="hs2", how="left")
-
-        df.drop(["hs2_aux"], axis = 1, inplace = True)
-
-        # Reorder cols
-        df = df[["hs2", "hs2_name","hs4", "hs4_name","hs6", "hs6_name"]]
-
+        for year in years:
+            for country in countries:
+                cut = {
+                    'Year': str(year),
+                    'Exporter Country': str(country)
+                }
+                cube = 'trade_i_baci_a_92'
+                drilldown = ['Year', 'Exporter Country', 'Importer Country', 'HS6']
+                measure = ['Trade Value']
+                df = oec.get_data(auth=True, cube=cube,drilldown=drilldown, measure=measure, cut=cut, token=None)
         return df
 
 
 
-class ProductPipeline(EasyPipeline):
+class TradeValuesPipeline(EasyPipeline):
     @staticmethod
     def parameter_list():
         return [
@@ -67,21 +58,30 @@ class ProductPipeline(EasyPipeline):
         db_connector = Connector.fetch('clickhouse-local', open('../conns.yaml'))
 
         dtype = {
-
+            'year': 'Int64',
+            'exporter_country_id': 'String',
+            'exporter_country': 'String',
+            'importer_country_id': 'String',
+            'importer_country': 'String',
+            'hs6_id': 'Int64',
+            'hs6': 'String',
+            'trade_value': 'Float64',
         }
 
-        product_step = ProductStep()
+        members_step = MembersStep()
+
+        trade_values_step = TradeValuesStep()
 
         load_step = LoadStep(
-            'dim_product',
+            'trade_values',
             db_connector,
-            if_exists = 'drop',
+            if_exists = 'append',
             dtype = dtype,
-            pk = ['hs2','hs4','hs6'],
-            # nullable_list=['']
+            pk = ['year'],
+            nullable_list=['year', 'exporter_country_id', 'exporter_country','importer_country_id', 'importer_country', 'hs6_id', 'hs6','trade_value']
         )        
-        return [product_step, load_step]   
+        return [members_step, trade_values_step, load_step]   
 
 if __name__ == "__main__":
-    pp = ProductPipeline()
+    pp = TradeValuesPipeline()
     df = pp.run({})
