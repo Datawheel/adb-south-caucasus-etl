@@ -66,6 +66,12 @@ class ProductPipeline(EasyPipeline):
         db_connector = Connector.fetch('clickhouse-local', open('../conns.yaml'))
 
         dtype = {
+            "hs2": "Int32",
+            "hs2_name": "String",
+            "hs4": "Int32",
+            "hs4_name": "String",
+            "hs6": "Int32",
+            "hs6_name": "String",
 
         }
 
