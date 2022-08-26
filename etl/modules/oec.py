@@ -35,31 +35,27 @@ class OEC:
         measure = ['Trade Value']
         cube='trade_i_baci_a_92'
         token = 'my_token'
-
-        oec.get_data(au)
-
-        
+                
         """
-        base_url = 'https://oec.world/olap-proxy/data.jsonrecords?'
-
+        
         if cut == None:
             payload = {}
         else:
             payload = cut.copy()
         
-        drilldown = ', '.join(drilldown)
-        measure = ', '.join(measure)
-
+        drilldown = ','.join(drilldown)
+        measure = ','.join(measure)
         payload['cube'] = cube
         payload['drilldowns'] = drilldown
         payload['measures'] = measure
 
-        base_url = 'https://oec.world/olap-proxy/data.jsonrecords?'
+        base_url = 'https://app-goat.oec.world/olap-proxy/data.jsonrecords?'
 
         if auth:
             payload['token'] = token if token else os.environ['OEC_TOKEN']
             
         r = requests.get(base_url, params = payload)
+        print(r.url)
         df = pd.DataFrame(r.json()['data'])
         df.columns = df.columns.map(lambda x: x.replace(' ', '_').lower())
 
