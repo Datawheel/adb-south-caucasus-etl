@@ -30,7 +30,7 @@ class YearsPipeline(EasyPipeline):
 
     @staticmethod
     def steps(params):
-        db_connector = Connector.fetch('clickhouse-local', open('../conns.yaml'))
+        db_connector = Connector.fetch('clickhouse-database', open('../conns.yaml'))
 
         dtype = {
             'year': 'Int16',

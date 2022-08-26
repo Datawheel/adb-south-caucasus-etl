@@ -63,7 +63,7 @@ class ProductPipeline(EasyPipeline):
 
     @staticmethod
     def steps(params):
-        db_connector = Connector.fetch('clickhouse-local', open('../conns.yaml'))
+        db_connector = Connector.fetch('clickhouse-database', open('../conns.yaml'))
 
         dtype = {
             "hs2": "Int32",
