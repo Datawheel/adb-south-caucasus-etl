@@ -58,12 +58,12 @@ class TradeValuesPipeline(EasyPipeline):
         db_connector = Connector.fetch('clickhouse-local', open('../conns.yaml'))
 
         dtype = {
-            'year': 'Int64',
+            'year': 'Int32',
             'exporter_country_id': 'String',
             'exporter_country': 'String',
             'importer_country_id': 'String',
             'importer_country': 'String',
-            'hs6_id': 'Int64',
+            'hs6_id': 'Int32',
             'hs6': 'String',
             'trade_value': 'Float64',
         }
