@@ -28,8 +28,8 @@ class TradeValuesStep(PipelineStep):
         # years = ['2019','2020']
         # countries = ['afago', 'euesp']
 
-        years = ['1995']
-        countries = ['afago']
+        # years = ['1995']
+        # countries = ['afago']
 
 
         for year in years:
@@ -58,12 +58,12 @@ class TradeValuesPipeline(EasyPipeline):
         db_connector = Connector.fetch('clickhouse-local', open('../conns.yaml'))
 
         dtype = {
-            'year': 'Int32',
+            'year': 'Int64',
             'exporter_country_id': 'String',
             'exporter_country': 'String',
             'importer_country_id': 'String',
             'importer_country': 'String',
-            'hs6_id': 'Int32',
+            'hs6_id': 'Int64',
             'hs6': 'String',
             'trade_value': 'Float64',
         }
@@ -77,11 +77,14 @@ class TradeValuesPipeline(EasyPipeline):
             db_connector,
             if_exists = 'append',
             dtype = dtype,
-            pk = ['year'],
-            nullable_list=['year', 'exporter_country_id', 'exporter_country','importer_country_id', 'importer_country', 'hs6_id', 'hs6','trade_value']
+            pk = ['year', 'exporter_country_id','importer_country_id','hs6_id'],
+            nullable_list=[ 'exporter_country', 'importer_country', 'hs6','trade_value']
         )        
         return [members_step, trade_values_step, load_step]   
 
 if __name__ == "__main__":
     pp = TradeValuesPipeline()
     df = pp.run({})
+
+
+# improve the log!
