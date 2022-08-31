@@ -1,5 +1,5 @@
 # IPython Notebook
 .ipynb_checkpoints
 .__pycache__/
-
+.modules/__pycache__/
 .env
