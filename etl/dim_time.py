@@ -33,7 +33,7 @@ class YearsPipeline(EasyPipeline):
         db_connector = Connector.fetch('clickhouse-database', open('../conns.yaml'))
 
         dtype = {
-            'dim_year': 'Int16',
+            'year': 'Int16',
         }
 
         years_step = YearsStep()
