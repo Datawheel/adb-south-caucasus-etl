@@ -22,11 +22,11 @@ class MembersStep(PipelineStep):
 class TradeValuesStep(PipelineStep):
     def run_step(self, prev_result, params):
         # Unpack prev
-        years, countries = prev_result
+        # years, countries = prev_result
 
         oec = OEC()
-        # years = ['2019','2020']
-        # countries = ['afago', 'euesp']
+        years = ['2019','2020']
+        countries = ['afago', 'euesp']
 
         # years = ['1995']
         # countries = ['afago']
@@ -55,7 +55,7 @@ class TradeValuesPipeline(EasyPipeline):
 
     @staticmethod
     def steps(params):
-        db_connector = Connector.fetch('clickhouse-local', open('../conns.yaml'))
+        db_connector = Connector.fetch('clickhouse-database', open('../conns.yaml'))
 
         dtype = {
             'year': 'Int64',
