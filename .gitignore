@@ -1,7 +1,7 @@
 # IPython Notebook
 .ipynb_checkpoints
 .__pycache__/
-.modules/__pycache__/
+.etl/modules/__pycache__/
 .env
 .DS_Store
 .pyc
