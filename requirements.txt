@@ -1,0 +1,3 @@
+bamboo-cli
+dw-bamboo-cli
+ppft==1.6.6.4
