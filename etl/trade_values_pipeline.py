@@ -7,41 +7,25 @@ from bamboo_lib.connectors.models import Connector
 from bamboo_lib.models import EasyPipeline, PipelineStep, Parameter
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.logger import logger
+from static import LIST_COUNTRY
 
-
-class MembersStep(PipelineStep):
-    def run_step(self, prev_result, params):
-        oec = OEC()
-        # Get members
-        # Years
-        years = oec.get_members(payload={'cube': 'trade_i_baci_a_92','level': 'Year'}).sort_values("id").reset_index(drop=True)['id']
-        # Countries
-        countries = oec.get_members(payload={'cube': 'trade_i_baci_a_92','level': 'Country'}).sort_values("id").reset_index(drop=True)['id']
-        return(years, countries)
 
 class TradeValuesStep(PipelineStep):
     def run_step(self, prev_result, params):
-        # Unpack prev
-        # years, countries = prev_result
-
         oec = OEC()
-        years = ['2019','2020']
-        countries = ['afago', 'euesp']
-
-        # years = ['1995']
-        # countries = ['afago']
-
-
-        for year in years:
-            for country in countries:
-                cut = {
-                    'Year': str(year),
-                    'Exporter Country': str(country)
-                }
-                cube = 'trade_i_baci_a_92'
-                drilldown = ['Year', 'Exporter Country', 'Importer Country', 'HS6']
-                measure = ['Trade Value']
-                df = oec.get_data(auth=True, cube=cube,drilldown=drilldown, measure=measure, cut=cut, token=None)
+        
+        year = params.get('year')
+        country = params.get('country')
+        
+        cut = {
+            'Year': str(year),
+            'Exporter Country': str(country)
+        }
+        cube = 'trade_i_baci_a_92'
+        drilldown = ['Year', 'Exporter Country', 'Importer Country', 'HS6']
+        measure = ['Trade Value']
+        df = oec.get_data(auth=True, cube=cube,drilldown=drilldown, measure=measure, cut=cut, token=None)
+        df[]
         return df
 
 
@@ -50,7 +34,8 @@ class TradeValuesPipeline(EasyPipeline):
     @staticmethod
     def parameter_list():
         return [
-
+            Parameter(label='year', name='year', dtype=str),
+            Parameter(label='country', name='country', dtype=str)
         ]
 
     @staticmethod
@@ -68,8 +53,6 @@ class TradeValuesPipeline(EasyPipeline):
             'trade_value': 'Float64',
         }
 
-        members_step = MembersStep()
-
         trade_values_step = TradeValuesStep()
 
         load_step = LoadStep(
@@ -80,11 +63,17 @@ class TradeValuesPipeline(EasyPipeline):
             pk = ['year', 'exporter_country_id','importer_country_id','hs6_id'],
             nullable_list=[ 'exporter_country', 'importer_country', 'hs6','trade_value']
         )        
-        return [members_step, trade_values_step, load_step]   
+        return [trade_values_step, load_step]   
 
 if __name__ == "__main__":
     pp = TradeValuesPipeline()
-    df = pp.run({})
+
+    for country in LIST_COUNTRY:
+        for year in range(1995,2020 + 1):
+            pp.run({
+                "year": year,
+                "country": country
+            })
 
 
 # improve the log!

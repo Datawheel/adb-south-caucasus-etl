@@ -19,6 +19,7 @@ class OEC:
         """
         base_url = 'https://oec.world/olap-proxy/members?'
         r = requests.get(base_url, params = payload)
+        print(r.url)
         df = pd.DataFrame(r.json()['data'])
         df.sort_values('ID').reset_index(drop=True)
         df.columns = df.columns.map(lambda x: x.replace(' ', '_').lower())

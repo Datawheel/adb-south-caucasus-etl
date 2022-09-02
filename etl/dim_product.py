@@ -38,14 +38,12 @@ class ProductStep(PipelineStep):
         df_hs6.columns = ['hs6','hs6_name']
 
         # Add columns to assist merge
-        df_hs4['hs2_aux'] = df_hs4['hs4'].apply(lambda id: int(str(id)[:-2]))
+        # df_hs4['hs2_aux'] = df_hs4['hs4'].apply(lambda id: int(str(id)[:-2]))
         df_hs6['hs2_aux'] = df_hs6['hs6'].apply(lambda id: int(str(id)[:-4]))
-
+        df_hs6['hs4_aux'] = df_hs6['hs6'].apply(lambda id: int(str(id)[:-2]))
         # Final
-        df = pd.merge(left=df_hs6,right=df_hs4, left_on="hs2_aux", right_on="hs2_aux", how="left")
+        df = pd.merge(left=df_hs6,right=df_hs4, left_on="hs4_aux", right_on="hs4", how="left")
         df = pd.merge(left=df,right=df_hs2, left_on="hs2_aux", right_on="hs2", how="left")
-
-        df.drop(["hs2_aux"], axis = 1, inplace = True)
 
         # Reorder cols
         df = df[["hs2", "hs2_name","hs4", "hs4_name","hs6", "hs6_name"]]
@@ -66,11 +64,11 @@ class ProductPipeline(EasyPipeline):
         db_connector = Connector.fetch('clickhouse-database', open('../conns.yaml'))
 
         dtype = {
-            "hs2": "Int32",
+            "hs2": "Int64",
             "hs2_name": "String",
-            "hs4": "Int32",
+            "hs4": "Int64",
             "hs4_name": "String",
-            "hs6": "Int32",
+            "hs6": "Int64",
             "hs6_name": "String",
 
         }

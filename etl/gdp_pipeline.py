@@ -1,31 +1,27 @@
 import pandas as pd
 
-from modules.oec import OEC
-
 from bamboo_lib.connectors.models import Connector
 from bamboo_lib.models import EasyPipeline, PipelineStep, Parameter
 from bamboo_lib.steps import DownloadStep, LoadStep
+from bamboo_lib.logger import logger
 
 
-class YearsStep(PipelineStep):
+
+
+class ReadStep(PipelineStep):
     def run_step(self, prev_result, params):
-        oec = OEC()
-        payload = {
-            'cube': 'trade_i_baci_a_92',
-            'level': 'Year'
-        }
-        df = oec.get_members(payload=payload)
-        df = df.sort_values("id").reset_index(drop=True)
-        df.columns = ['year']
+        df = pd.read_excel("data/gdp_data.xls")
+        df = df.melt("Country Code")
+        df.columns = ['country_id', 'year', 'gdp']
+        df['year'] = df['year'].apply(lambda x: int(x))
         return df
 
 
 
-class YearsPipeline(EasyPipeline):
+class GdpPipeline(EasyPipeline):
     @staticmethod
     def parameter_list():
         return [
-
         ]
 
     @staticmethod
@@ -34,19 +30,25 @@ class YearsPipeline(EasyPipeline):
 
         dtype = {
             'year': 'Int64',
+            'country_id': 'String',
+            'gdp': 'Float64'
         }
 
-        years_step = YearsStep()
+        read_step = ReadStep()
 
         load_step = LoadStep(
-            'dim_time',
+            'gdp',
             db_connector,
             if_exists = 'drop',
             dtype = dtype,
-            pk = ['year']
+            pk = ['year', 'country_id'],
+            nullable_list=[ 'gdp' ]
         )        
-        return [years_step, load_step]   
+        return [read_step, load_step]   
 
 if __name__ == "__main__":
-    pp = YearsPipeline()
-    df = pp.run({})
+    pp = GdpPipeline()
+    pp.run({})
+
+# improve the log!
+# Find a way to merge into oec country id
