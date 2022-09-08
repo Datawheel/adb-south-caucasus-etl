@@ -14,14 +14,18 @@ class CountriesStep(PipelineStep):
         #  logger.info("Downloading Members: {} {}  from OEC...".format(payload['cube'], payload['level']))
 
         oec = OEC()
-        
+
         cube = 'trade_i_baci_a_92'
         drilldown = ['Exporter Country']
         measure = ['Trade Value']
         properties = ['Exporter Country ISO 3']
 
-        df = oec.get_data(auth=True, cube=cube,drilldown=drilldown, measure=measure, properties=properties,token=None)
+        df = oec.get_data(auth=True, cube=cube,drilldown=drilldown, measure=measure, properties=properties,token='560ac5684ded4f8d63074ed94739772b')
 
+        df['iso_3'] = df['iso_3'].str.upper()
+        
+        df = df[['country_id','country', 'iso_3']]
+        df.columns = ['oec_id','comtrade_name', 'iso_3']
         return df
 
 
@@ -42,6 +46,7 @@ class CountriesPipeline(EasyPipeline):
         dtype = {
             'oec_id': 'String',
             'comtrade_name': 'String',
+            'iso_3': 'String'
         }
 
         countries_step = CountriesStep()
@@ -52,7 +57,7 @@ class CountriesPipeline(EasyPipeline):
             if_exists = 'drop',
             dtype = dtype,
             pk = ['oec_id'],
-            nullable_list=['comtrade_name']
+            nullable_list=['comtrade_name','iso_3']
         )        
         return [countries_step, load_step]   
 
