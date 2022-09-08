@@ -25,7 +25,7 @@ class OEC:
         df.columns = df.columns.map(lambda x: x.replace(' ', '_').lower())
         return df
 
-    def get_data(self, auth:bool, cube:str, drilldown:list, measure:list,token:Optional[str], cut=None):
+    def get_data(self, auth:bool, cube:str, drilldown:list, measure:list,token:Optional[str], cut=None, properties=None):
         """
         usage example:
         cut = {
@@ -43,12 +43,15 @@ class OEC:
             payload = {}
         else:
             payload = cut.copy()
-        
+
         drilldown = ','.join(drilldown)
         measure = ','.join(measure)
         payload['cube'] = cube
         payload['drilldowns'] = drilldown
         payload['measures'] = measure
+
+        if properties != None:
+            payload['properties'] = properties
 
         base_url = 'https://app-goat.oec.world/olap-proxy/data.jsonrecords?'
 

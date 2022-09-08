@@ -14,15 +14,17 @@ class CountriesStep(PipelineStep):
         #  logger.info("Downloading Members: {} {}  from OEC...".format(payload['cube'], payload['level']))
 
         oec = OEC()
-        payload = {
-            'cube': 'trade_i_baci_a_92',
-            'level': 'Country'
-        }
-        df = oec.get_members(payload=payload)
         
-        df.columns = ['oec_id', 'comtrade_name']
-        print(df.dtypes)
+        cube = 'trade_i_baci_a_92'
+        drilldown = ['Exporter Country']
+        measure = ['Trade Value']
+        properties = ['Exporter Country ISO 3']
+
+        df = oec.get_data(auth=True, cube=cube,drilldown=drilldown, measure=measure, properties=properties,token=None)
+
         return df
+
+
 
 
 
