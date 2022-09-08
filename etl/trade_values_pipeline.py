@@ -25,7 +25,6 @@ class TradeValuesStep(PipelineStep):
         drilldown = ['Year', 'Exporter Country', 'Importer Country', 'HS6']
         measure = ['Trade Value']
         df = oec.get_data(auth=True, cube=cube,drilldown=drilldown, measure=measure, cut=cut, token=None)
-        df[]
         return df
 
 
