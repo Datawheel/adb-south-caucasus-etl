@@ -1,0 +1,5 @@
+export OEC_TOKEN='token';
+export CLICKHOUSE_USERNAME="deploy";
+export CLICKHOUSE_PASSWORD="";
+export CLICKHOUSE_URL="";
+export CLICKHOUSE_DATABASE="adb_db";
