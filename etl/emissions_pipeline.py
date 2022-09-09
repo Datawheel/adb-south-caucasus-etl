@@ -28,7 +28,6 @@ class EmissionsPipeline(EasyPipeline):
         dtype = {
             'country': 'String',
             'year': 'Int64',
-            'population': 'Float64',
             'eci_trade': 'Float64',
             'exports': 'Float64',
             'fitness_trade': 'Float64',
