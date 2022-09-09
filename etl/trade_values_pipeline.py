@@ -25,6 +25,7 @@ class TradeValuesStep(PipelineStep):
         drilldown = ['Year', 'Exporter Country', 'Importer Country', 'HS6']
         measure = ['Trade Value']
         df = oec.get_data(auth=True, cube=cube,drilldown=drilldown, measure=measure, cut=cut, token=None)
+        # What if there's no data on the OEC? how to jump that exeption?
         return df
 
 
