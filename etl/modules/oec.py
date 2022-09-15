@@ -53,13 +53,13 @@ class OEC:
         if properties != None:
             payload['properties'] = properties
 
-        base_url = 'https://app-goat.oec.world/olap-proxy/data.jsonrecords?'
+        base_url = 'https://oec.world/olap-proxy/data.jsonrecords?'
 
         if auth:
             payload['token'] = token if token else os.environ['OEC_TOKEN']
             
         r = requests.get(base_url, params = payload)
-        print(r.url)
+        # print(r.url)
         df = pd.DataFrame(r.json()['data'])
         df.columns = df.columns.map(lambda x: x.replace(' ', '_').lower())
 

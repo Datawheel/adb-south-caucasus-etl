@@ -1,5 +1,5 @@
-#LIST_COUNTRY = [
- #   'afago', 'afbdi', 'afben', 'afbfa', 'afbwa', 'afcaf', 'afciv',
+LIST_COUNTRY = [
+    # 'afago', 'afbdi', 'afben', 'afbfa', 'afbwa', 'afcaf', 'afciv',
     # 'afcmr', 'afcod', 'afcog', 'afcom', 'afcpv', 'afdji', 'afdza',
     # 'afegy', 'aferi', 'afesh', 'afeth', 'afgab', 'afgha', 'afgin',
     # 'afgmb', 'afgnb', 'afgnq', 'afken', 'aflbr', 'aflby', 'aflso',
@@ -19,7 +19,8 @@
     # 'astwn', 'asuzb', 'asvnm', 'aswak', 'asxxa', 'asxxb', 'asxxc',
     # 'asxxd', 'asxxe', 'asyar', 'asyem', 'asymd', 'euala', 'eualb', 
     # 'euand', 'euaut', 'eubel', 'eubgr', 'eubih', 'eublr', 'eublx', 
-    # 'eubxx', 'euche', 'euchi', 'eucsk', 'eucze', 'euddr', 'eudeu',
+    # 'eubxx', 'euche', 'euchi', 'eucsk', 'eucze', 'euddr', 
+    'eudeu',
     # 'eudnk', 'euesp', 'euest', 'eueue', 'eufdr', 'eufin', 'eufra', 'eufro', 'eugbr', 'euggy', 'eugib', 'eugrc',    
     # 'euhrv', 'euhun', 'euimn', 'euirl', 'euisl', 'euita', 'eujey', 'euksv', 'eulie', 'eultu', 'eulux', 'eulva',
     # 'eumad', 'eumco', 'eumda', 'eumkd', 'eumlt', 'eumne', 'eunld', 'eunor', 'eupol', 'euprt', 'eurou', 
@@ -36,15 +37,15 @@
     # 'saguf', 'saguy', 'saper', 'sapry', 'sasur', 'saury', 'saven', 'saxxa', 'xxatf', 'xxemx', 'xxepx',
     # 'xximf', 'xxwld', 'xxwox', 'xxxxa', 'xxxxb', 'xxxxc', 'xxxxd', 'xxxxe', 'xxxxf', 'xxxxg', 'xxxxh',
     # 'xxxxi', 'xxxxj', 'xxxxk', 'xxxxm', 'xxxxn', 'xxxxo', 'xxxxp', 'xxxxq'
-    # ]
-
-
-LIST_COUNTRY = [
-    'asgeo', # GEORGIA
-    'asarm', # ARMENIA
-    'asaze', # AZERBAJIAN
-#     # 'asirn', # IRAN
-#     # 'astur', # TURKEY
-#     # 'eurus'  # RUSIA
     ]
+
+
+# LIST_COUNTRY = [
+#     'asgeo', # GEORGIA
+#     'asarm', # ARMENIA
+#     'asaze', # AZERBAJIAN
+# #     # 'asirn', # IRAN
+# #     # 'astur', # TURKEY
+# #     # 'eurus'  # RUSIA
+#     ]
 
