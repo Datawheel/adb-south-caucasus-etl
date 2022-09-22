@@ -1,0 +1,11 @@
+# IPython Notebook
+.ipynb_checkpoints
+.__pycache__/
+.etl/modules/__pycache__/
+.env
+.DS_Store
+.pyc
+.ipynb
+notebook.ipynb
+etl/modules/__pycache__/__init__.cpython-38.pyc
+etl/modules/__pycache__/oec.cpython-38.pyc
