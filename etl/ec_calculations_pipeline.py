@@ -143,10 +143,10 @@ class ECStep(PipelineStep):
         
         df_dict = {
                 # [dataframe, with_aga, with_oil] 
-                'countries': [df_countries.reset_index(), 0, 0, 1],
-                'countries_no_oil': [df_countries_no_oil.reset_index(), 1,0, 0],
-                'countries_aga': [df_countries_aga.reset_index(), 2,1, 1],
-                'countries_aga_no_oil': [df_countries_aga_no_oil.reset_index(), 3, 1, 0]
+                'countries': [df_countries.reset_index(drop = True), 0, 0, 1],
+                'countries_no_oil': [df_countries_no_oil.reset_index(drop = True), 1,0, 0],
+                'countries_aga': [df_countries_aga.reset_index(drop = True), 2,1, 1],
+                'countries_aga_no_oil': [df_countries_aga_no_oil.reset_index(drop = True), 3, 1, 0]
         }
 
 
