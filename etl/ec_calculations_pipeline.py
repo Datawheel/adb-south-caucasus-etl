@@ -3,8 +3,6 @@ from modules.oec import OEC
 import requests as r
 import numpy as np 
 import economic_complexity as ec
-from static import transform_dict
-
 from bamboo_lib.connectors.models import Connector
 from bamboo_lib.models import EasyPipeline, PipelineStep, Parameter
 from bamboo_lib.steps import LoadStep
@@ -257,6 +255,7 @@ class ECPipeline(EasyPipeline):
 
 
         if params.get('calc') == 'rca':
+
             dtype = {
                 'geo_id': 'String',
                 'hs4_id': 'UInt16',
@@ -363,4 +362,4 @@ if __name__ == "__main__":
     pp = ECPipeline()
     list_calcs = ['rca', 'eci', 'pci', 'relatedness', 'op_gain']
     for i in list_calcs:
-        pp.run({'calcs': i})
+        pp.run({'calc': i})
