@@ -46,7 +46,8 @@ class ProductStep(PipelineStep):
 
         # Reorder cols
         df = df[["hs2", "hs2_name","hs4", "hs4_name","hs6", "hs6_name"]]
-
+        # Rename cols
+        df.columns = ['hs2_id', 'hs2', 'hs4_id', 'hs4', 'hs6_id', 'hs6']
         return df
 
 
@@ -63,12 +64,12 @@ class ProductPipeline(EasyPipeline):
         db_connector = Connector.fetch('clickhouse-database', open('../conns.yaml'))
 
         dtype = {
-            "hs2": "Int64",
-            "hs2_name": "String",
-            "hs4": "Int64",
-            "hs4_name": "String",
-            "hs6": "Int64",
-            "hs6_name": "String",
+            "hs2_id": "Int64",
+            "hs2": "String",
+            "hs4_id": "Int64",
+            "hs4": "String",
+            "hs6_id": "Int64",
+            "hs6": "String",
 
         }
 
@@ -79,7 +80,7 @@ class ProductPipeline(EasyPipeline):
             db_connector,
             if_exists = 'drop',
             dtype = dtype,
-            pk = ['hs2','hs4','hs6'],
+            pk = ['hs2_id','hs4_id','hs6_id'],
             # nullable_list=['']
         )        
         return [product_step, load_step]   
