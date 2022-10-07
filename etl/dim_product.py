@@ -38,7 +38,6 @@ class ProductStep(PipelineStep):
         df_hs6.columns = ['hs6','hs6_name']
 
         # Add columns to assist merge
-        # df_hs4['hs2_aux'] = df_hs4['hs4'].apply(lambda id: int(str(id)[:-2]))
         df_hs6['hs2_aux'] = df_hs6['hs6'].apply(lambda id: int(str(id)[:-4]))
         df_hs6['hs4_aux'] = df_hs6['hs6'].apply(lambda id: int(str(id)[:-2]))
         # Final
