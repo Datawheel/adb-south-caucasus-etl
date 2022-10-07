@@ -6,12 +6,14 @@ import economic_complexity as ec
 from bamboo_lib.connectors.models import Connector
 from bamboo_lib.models import EasyPipeline, PipelineStep, Parameter
 from bamboo_lib.steps import LoadStep
+from bamboo_lib.logger import logger
+
 
 
 class DownloadStep(PipelineStep):
     def run_step(self, prev, params):
         # Get data directly form the OEC
-
+        logger.info("Downloading: from OEC...")
         df_between_AGA_initial = pd.DataFrame(r.get('https://oec.world/olap-proxy/data.jsonrecords?Exporter+Country=asarm%2Casaze%2Casgeo&Importer+Country=asarm%2Casaze%2Casgeo&Year=2017%2C2018%2C2019%2C2020&cube=trade_i_baci_a_92&drilldowns=Exporter+Country%2CHS4%2CImporter+Country&measures=Trade+Value&token=f24460fbd84d519342d4e5047faafe91').json()['data'])
         df_between_AGA_initial
 
@@ -23,7 +25,7 @@ class DownloadStep(PipelineStep):
         df_indicators_initial = pd.DataFrame(r.get('https://oec.world/olap-proxy/data.jsonrecords?Indicator=NY.GDP.MKTP.PP.KD%2CNY.GDP.PCAP.PP.KD%2CSP.POP.TOTL&Year=2020&cube=indicators_i_wdi_a&drilldowns=Country%2CIndicator&measures=Measure&token=f24460fbd84d519342d4e5047faafe91').json()['data'])
         df_indicators_initial = df_indicators_initial.pivot(index = 'Country ID',columns=['Indicator'], values = ['Measure'], ).reset_index()
         df_indicators_initial.columns = ['Country ID','GDP per capita, PPP (constant 2017 international $)','GDP, PPP (constant 2017 international $)', 'Population, total']
-
+        logger.info("Processing Download...")
 
         # Make copies
         df_all_countries = df_international_initial.copy()
@@ -118,13 +120,14 @@ class DownloadStep(PipelineStep):
 
         df_countries_no_oil = df_countries_no_oil.reset_index()
         df_countries_aga_no_oil = df_countries_aga_no_oil.reset_index()
-
+        logger.info("Download Ready")
 
         return df_countries, df_countries_no_oil, df_countries_aga, df_countries_aga_no_oil
 
 class ECStep(PipelineStep):
     def run_step(self, prev_result, params):
         df_countries, df_countries_no_oil, df_countries_aga, df_countries_aga_no_oil = prev_result
+        logger.info("Calculating {}...".format(params.get('calc')))
         def export_similarity_index(rca):    
             rca = np.log(rca + 1)
             numerator = rca.sub(rca.mean(axis = 1), axis = 0)
@@ -221,7 +224,7 @@ class ECStep(PipelineStep):
         df_pci = df_pci.reset_index(drop = True)
         df_relatedness = df_relatedness.reset_index(drop = True)
         df_op_gain = df_op_gain.reset_index(drop = True)
-
+        logger.info("Calculations Ready")
 
 
         if params.get('calc') == 'rca':
