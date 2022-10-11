@@ -164,58 +164,53 @@ class ECStep(PipelineStep):
             with_aga = metadata[2]
             with_oil = metadata[3]
 
-            
-            # RCA
             rca = ec.rca(df.set_index('Country ID'))
-            # ECI
             eci_value, pci_value = ec.complexity(rca)
-            # PCI
-            # LOGIC LAGER! ''
             proximity = ec.proximity(rcas=rca)
             similarity = export_similarity_index(rca=rca)
-            # LOGIC LAGER!
-            # Relatedness
             relatedness = ec.relatedness(rcas=rca, proximities=proximity)
-            # OP Gain
             op_gain = ec.opportunity_gain(rcas = rca, proximities=proximity, pci = pci_value)
 
             rca = rca.reset_index().melt(id_vars = 'Country ID', value_vars = rca.columns, value_name = 'rca').rename(columns = {'Country ID':'geo_id', 'HS4 ID':'hs4_id', 'rca':'rca'})
             rca['dataset'] = dataset
             rca['with_aga'] = with_aga
             rca['with_oil'] = with_oil
-
             df_rca = pd.concat([df_rca, rca])
 
             eci = eci_value.to_frame(name = 'eci').sort_values(by = 'eci',ascending=False).reset_index().rename(columns = {'Country ID':'geo_id'})
             eci['dataset'] = dataset
             eci['with_aga'] = with_aga
             eci['with_oil'] = with_oil
-
-
             df_eci = pd.concat([df_eci, eci])
 
             pci = pci_value.to_frame(name = 'pci').sort_values(by= 'pci',ascending=False).reset_index().rename(columns = {'HS4 ID':'hs4_id'})
             pci['dataset'] = dataset
             pci['with_aga'] = with_aga
             pci['with_oil'] = with_oil
-
-
             df_pci = pd.concat([df_pci, pci])
-            
+
             relatedness = relatedness.stack().reset_index().rename(columns={'Country ID': 'geo_id', 'HS4 ID': 'hs4_id', 0: 'relatedness'}).sort_values(by = 'relatedness',ascending=False).reset_index(drop=True)
             relatedness['dataset'] = dataset
             relatedness['with_aga'] = with_aga
             relatedness['with_oil'] = with_oil
-
-
             df_relatedness = pd.concat([df_relatedness, relatedness])
+
+            proximity = proximity.stack().to_frame().reset_index(level=1).rename(columns = {'HS4 ID': 'hs4_id_2', 0:'proximity'}).reset_index().rename(columns = {'HS4 ID': 'hs4_id_1'}).sort_values(by='proximity', ascending = False).reset_index(drop =True)
+            proximity['dataset'] = dataset
+            proximity['with_aga'] = with_aga
+            proximity['with_oil'] = with_oil
+            df_proximity = pd.concat([df_proximity, proximity])
+            
+            similarity = similarity
+            similarity['dataset'] = dataset
+            similarity['with_aga'] = with_aga
+            similarity['with_oil'] = with_oil    
+            df_similarity = pd.concat([df_similarity, similarity])
 
             op_gain = op_gain.stack().reset_index().rename(columns={'Country ID': 'geo_id', 'HS4 ID': 'hs4_id', 0: 'op_gain'}).sort_values(by = 'op_gain',ascending=False).reset_index(drop=True)
             op_gain['dataset'] = dataset
             op_gain['with_aga'] = with_aga
             op_gain['with_oil'] = with_oil
-
-
             df_op_gain = pd.concat([df_op_gain, op_gain])
 
 
@@ -223,6 +218,8 @@ class ECStep(PipelineStep):
         df_eci = df_eci.reset_index(drop = True)
         df_pci = df_pci.reset_index(drop = True)
         df_relatedness = df_relatedness.reset_index(drop = True)
+        df_proximity = df_proximity.reset_index(drop = True)
+        df_similarity = df_similarity.reset_index(drop = True)
         df_op_gain = df_op_gain.reset_index(drop = True)
         logger.info("Calculations Ready")
 
@@ -239,8 +236,18 @@ class ECStep(PipelineStep):
         if params.get('calc') == 'relatedness':
             return(df_relatedness)
         
+        if params.get('calc') == 'proximity':
+            return(df_proximity)
+
+        if params.get('calc') == 'similarity':
+            return(df_similarity)
+        
+        if params.get('calc') == 'relatedness':
+            return(df_relatedness)
+        
         if params.get('calc') == 'op_gain':
             return(df_op_gain)
+        
 
 
 
@@ -333,6 +340,46 @@ class ECPipeline(EasyPipeline):
                 nullable_list=['relatedness']
             )        
         
+
+        if params.get('calc') == 'proximity':
+            dtype = {
+                'hs4_id_1': 'UInt16',
+                'hs4_id_2': 'UInt16',
+                'proximity': 'Float64',
+                'dataset': 'UInt16',
+                'with_aga': 'UInt16',
+                'with_oil': 'UInt16',
+            }
+
+            load_step = LoadStep(
+                'proximity',
+                db_connector,
+                if_exists = 'append',
+                dtype = dtype,
+                pk = ['hs4_id_1','hs4_id_2', 'dataset','with_aga', 'with_oil'],
+                nullable_list=['proximity']
+            )        
+
+
+        if params.get('calc') == 'similarity':
+            dtype = {
+                'geo_id_1': 'String',
+                'geo_id_2': 'String',
+                'similarity': 'Float64',
+                'dataset': 'UInt16',
+                'with_aga': 'UInt16',
+                'with_oil': 'UInt16',
+            }
+
+            load_step = LoadStep(
+                'similarity',
+                db_connector,
+                if_exists = 'append',
+                dtype = dtype,
+                pk = ['geo_id_1','geo_id_2', 'dataset','with_aga', 'with_oil'],
+                nullable_list=['similarity']
+            )        
+
         if params.get('calc') == 'op_gain':
 
             dtype = {
@@ -363,6 +410,7 @@ class ECPipeline(EasyPipeline):
 
 if __name__ == "__main__":
     pp = ECPipeline()
-    list_calcs = ['rca', 'eci', 'pci', 'relatedness', 'op_gain']
+    # list_calcs = ['rca', 'eci', 'pci', 'relatedness', 'op_gain']
+    list_calcs = ['proximity', 'similarity']
     for i in list_calcs:
         pp.run({'calc': i})
