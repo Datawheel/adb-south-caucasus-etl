@@ -157,7 +157,7 @@ class ExportsPipeline(EasyPipeline):
         dtype = {
             'oec_id': 'String',
             'hs4_id': 'UInt16',
-            'trade_value': 'UInt16',
+            'trade_value': 'Float64',
             'with_aga': 'UInt16',
             'with_oil': 'UInt16',
         }
@@ -167,13 +167,13 @@ class ExportsPipeline(EasyPipeline):
             db_connector,
             if_exists = 'drop',
             dtype = dtype,
-            pk = ['oec_id', 'hs4_id', 'dataset', 'with_aga', 'with_oil'],
-            nullable_list=['op_gain']
+            pk = ['oec_id', 'hs4_id', 'with_aga', 'with_oil'],
+            nullable_list=['trade_value']
         )        
 
         download = DownloadStep()
 
-        return [download]
+        return [download, load_step]
 
 if __name__ == "__main__":
     pp = ExportsPipeline()
