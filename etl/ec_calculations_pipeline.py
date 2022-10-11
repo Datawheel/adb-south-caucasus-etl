@@ -221,7 +221,7 @@ class ECStep(PipelineStep):
         df_pci = df_pci.reset_index(drop = True)
         df_relatedness = df_relatedness.reset_index(drop = True)
         df_proximity = df_proximity.reset_index(drop = True)
-        df_similarity = df_similarity.reset_index(drop = True)
+        df_similarity = df_similarity.reset_index(drop = True).rename({'oec_id_1': 'geo_id_1','oec_id_2': 'geo_id_2'})
         df_op_gain = df_op_gain.reset_index(drop = True)
         logger.info("Calculations Ready")
 
