@@ -155,10 +155,9 @@ class ECStep(PipelineStep):
         df_eci = pd.DataFrame() # |geo_id | method | with_oil | eci|
         df_pci = pd.DataFrame() # |hs4_id | method | with_oil | pci|
         df_proximity = pd.DataFrame() # LOGIC LAYER
-        df_similarity = pd.DataFrame()
         df_relatedness = pd.DataFrame() # |geo_id | hs4_id | method | with_oil | relatedness
         df_op_gain = pd.DataFrame() # |geo_id | hs4_id | method | with_oil | op_gain
-
+        df_similarity = pd.DataFrame()
 
         for df,metadata in df_dict.items():
             df = metadata[0].copy()
@@ -221,7 +220,7 @@ class ECStep(PipelineStep):
         df_pci = df_pci.reset_index(drop = True)
         df_relatedness = df_relatedness.reset_index(drop = True)
         df_proximity = df_proximity.reset_index(drop = True)
-        df_similarity = df_similarity.reset_index(drop = True).rename({'oec_id_1': 'geo_id_1','oec_id_2': 'geo_id_2'})
+        df_similarity = df_similarity.reset_index(drop = True).rename(columns= {'oec_id_1': 'geo_id_1', 'oec_id_2': 'geo_id_2'})
         df_op_gain = df_op_gain.reset_index(drop = True)
         logger.info("Calculations Ready")
 
@@ -423,7 +422,6 @@ class ECPipeline(EasyPipeline):
 
 if __name__ == "__main__":
     pp = ECPipeline()
-    # list_calcs = ['rca', 'eci', 'pci', 'relatedness', 'op_gain']
-    list_calcs = ['proximity', 'similarity']
+    list_calcs = ['rca', 'eci', 'pci', 'relatedness', 'op_gain','proximity', 'similarity']
     for i in list_calcs:
         pp.run({'calc': i})
