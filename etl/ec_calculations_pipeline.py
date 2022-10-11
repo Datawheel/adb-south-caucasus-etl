@@ -173,43 +173,37 @@ class ECStep(PipelineStep):
             op_gain = ec.opportunity_gain(rcas = rca, proximities=proximity, pci = pci_value)
 
             rca = rca.reset_index().melt(id_vars = 'Country ID', value_vars = rca.columns, value_name = 'rca').rename(columns = {'Country ID':'geo_id', 'HS4 ID':'hs4_id', 'rca':'rca'})
-            rca['dataset'] = dataset
+
             rca['with_aga'] = with_aga
             rca['with_oil'] = with_oil
             df_rca = pd.concat([df_rca, rca])
 
             eci = eci_value.to_frame(name = 'eci').sort_values(by = 'eci',ascending=False).reset_index().rename(columns = {'Country ID':'geo_id'})
-            eci['dataset'] = dataset
             eci['with_aga'] = with_aga
             eci['with_oil'] = with_oil
             df_eci = pd.concat([df_eci, eci])
 
             pci = pci_value.to_frame(name = 'pci').sort_values(by= 'pci',ascending=False).reset_index().rename(columns = {'HS4 ID':'hs4_id'})
-            pci['dataset'] = dataset
             pci['with_aga'] = with_aga
             pci['with_oil'] = with_oil
             df_pci = pd.concat([df_pci, pci])
 
             relatedness = relatedness.stack().reset_index().rename(columns={'Country ID': 'geo_id', 'HS4 ID': 'hs4_id', 0: 'relatedness'}).sort_values(by = 'relatedness',ascending=False).reset_index(drop=True)
-            relatedness['dataset'] = dataset
             relatedness['with_aga'] = with_aga
             relatedness['with_oil'] = with_oil
             df_relatedness = pd.concat([df_relatedness, relatedness])
 
             proximity = proximity.stack().to_frame().reset_index(level=1).rename(columns = {'HS4 ID': 'hs4_id_2', 0:'proximity'}).reset_index().rename(columns = {'HS4 ID': 'hs4_id_1'}).sort_values(by='proximity', ascending = False).reset_index(drop =True)
-            proximity['dataset'] = dataset
             proximity['with_aga'] = with_aga
             proximity['with_oil'] = with_oil
             df_proximity = pd.concat([df_proximity, proximity])
             
             similarity = similarity
-            similarity['dataset'] = dataset
             similarity['with_aga'] = with_aga
             similarity['with_oil'] = with_oil    
             df_similarity = pd.concat([df_similarity, similarity])
 
             op_gain = op_gain.stack().reset_index().rename(columns={'Country ID': 'geo_id', 'HS4 ID': 'hs4_id', 0: 'op_gain'}).sort_values(by = 'op_gain',ascending=False).reset_index(drop=True)
-            op_gain['dataset'] = dataset
             op_gain['with_aga'] = with_aga
             op_gain['with_oil'] = with_oil
             df_op_gain = pd.concat([df_op_gain, op_gain])
@@ -269,8 +263,7 @@ class ECPipeline(EasyPipeline):
 
             dtype = {
                 'geo_id': 'String',
-                'hs4_id': 'UInt16',
-                'dataset': 'UInt16',
+                'hs4_id': 'UInt32',
                 'with_aga': 'UInt16',
                 'with_oil': 'UInt16',
                 'rca': 'Float64',
@@ -281,7 +274,7 @@ class ECPipeline(EasyPipeline):
                 db_connector,
                 if_exists = 'append',
                 dtype = dtype,
-                pk = ['geo_id', 'hs4_id', 'dataset', 'with_aga', 'with_oil'],
+                pk = ['geo_id', 'hs4_id', 'with_aga', 'with_oil'],
                 nullable_list=['rca']
             )        
 
@@ -289,7 +282,6 @@ class ECPipeline(EasyPipeline):
             dtype = {
                 'geo_id': 'String',
                 'eci': 'Float64',
-                'dataset': 'UInt16',
                 'with_aga': 'UInt16',
                 'with_oil': 'UInt16',
             }
@@ -299,16 +291,15 @@ class ECPipeline(EasyPipeline):
                 db_connector,
                 if_exists = 'append',
                 dtype = dtype,
-                pk = ['geo_id','dataset', 'with_aga', 'with_oil'],
+                pk = ['geo_id', 'with_aga', 'with_oil'],
                 nullable_list=['eci']
             )        
 
 
         if params.get('calc') == 'pci':
             dtype = {
-                'hs4_id': 'UInt16',
+                'hs4_id': 'UInt32',
                 'pci': 'Float64',
-                'dataset': 'UInt16',
                 'with_aga': 'UInt16',
                 'with_oil': 'UInt16',
             }
@@ -318,15 +309,14 @@ class ECPipeline(EasyPipeline):
                 db_connector,
                 if_exists = 'append',
                 dtype = dtype,
-                pk = ['hs4_id', 'dataset', 'with_aga', 'with_oil'],
+                pk = ['hs4_id', 'with_aga', 'with_oil'],
                 nullable_list=['pci']
             )        
         
         if params.get('calc') == 'relatedness':
             dtype = {
                 'geo_id': 'String',
-                'hs4_id': 'UInt16',
-                'dataset': 'UInt16',
+                'hs4_id': 'UInt32',
                 'with_aga': 'UInt16',
                 'with_oil': 'UInt16',
                 'relatedness': 'Float64',
@@ -337,17 +327,16 @@ class ECPipeline(EasyPipeline):
                 db_connector,
                 if_exists = 'append',
                 dtype = dtype,
-                pk = ['geo_id', 'hs4_id', 'dataset', 'with_aga', 'with_oil'],
+                pk = ['geo_id', 'hs4_id', 'with_aga', 'with_oil'],
                 nullable_list=['relatedness']
             )        
         
 
         if params.get('calc') == 'proximity':
             dtype = {
-                'hs4_id_1': 'UInt16',
-                'hs4_id_2': 'UInt16',
+                'hs4_id_1': 'UInt32',
+                'hs4_id_2': 'UInt32',
                 'proximity': 'Float64',
-                'dataset': 'UInt16',
                 'with_aga': 'UInt16',
                 'with_oil': 'UInt16',
             }
@@ -357,7 +346,7 @@ class ECPipeline(EasyPipeline):
                 db_connector,
                 if_exists = 'append',
                 dtype = dtype,
-                pk = ['hs4_id_1','hs4_id_2', 'dataset','with_aga', 'with_oil'],
+                pk = ['hs4_id_1','hs4_id_2','with_aga', 'with_oil'],
                 nullable_list=['proximity']
             )        
 
@@ -367,7 +356,6 @@ class ECPipeline(EasyPipeline):
                 'geo_id_1': 'String',
                 'geo_id_2': 'String',
                 'similarity': 'Float64',
-                'dataset': 'UInt16',
                 'with_aga': 'UInt16',
                 'with_oil': 'UInt16',
             }
@@ -377,7 +365,7 @@ class ECPipeline(EasyPipeline):
                 db_connector,
                 if_exists = 'append',
                 dtype = dtype,
-                pk = ['geo_id_1','geo_id_2', 'dataset','with_aga', 'with_oil'],
+                pk = ['geo_id_1','geo_id_2','with_aga', 'with_oil'],
                 nullable_list=['similarity']
             )        
 
@@ -385,8 +373,7 @@ class ECPipeline(EasyPipeline):
 
             dtype = {
                 'geo_id': 'String',
-                'hs4_id': 'UInt16',
-                'dataset': 'UInt16',
+                'hs4_id': 'UInt32',
                 'with_aga': 'UInt16',
                 'with_oil': 'UInt16',
                 'op_gain': 'Float64',
@@ -396,8 +383,7 @@ class ECPipeline(EasyPipeline):
 
             dtype = {
                 'geo_id': 'String',
-                'hs4_id': 'UInt16',
-                'dataset': 'UInt16',
+                'hs4_id': 'UInt32',
                 'with_aga': 'UInt16',
                 'with_oil': 'UInt16',
                 'op_gain': 'Float64',
@@ -408,7 +394,7 @@ class ECPipeline(EasyPipeline):
                 db_connector,
                 if_exists = 'append',
                 dtype = dtype,
-                pk = ['geo_id', 'hs4_id', 'dataset', 'with_aga', 'with_oil'],
+                pk = ['geo_id', 'hs4_id', 'with_aga', 'with_oil'],
                 nullable_list=['op_gain']
             )        
 

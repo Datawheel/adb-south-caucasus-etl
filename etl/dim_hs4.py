@@ -75,11 +75,11 @@ class ProductPipeline(EasyPipeline):
         db_connector = Connector.fetch('clickhouse-database', open('../conns.yaml'))
 
         dtype = {
-            "section_id": "UInt64",
+            "section_id": "UInt32",
             "section": "String",
-            "hs2_id":   "UInt16",
+            "hs2_id":   "UInt32",
             "hs2":      "String",
-            "hs4_id":   "UInt16",
+            "hs4_id":   "UInt32",
             "hs4":      "String"
 
         }
