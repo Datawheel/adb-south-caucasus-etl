@@ -156,7 +156,7 @@ class ExportsPipeline(EasyPipeline):
 
         dtype = {
             'oec_id': 'String',
-            'hs4_id': 'UInt16',
+            'hs4_id': 'UInt32',
             'trade_value': 'Float64',
             'with_aga': 'UInt16',
             'with_oil': 'UInt16',
