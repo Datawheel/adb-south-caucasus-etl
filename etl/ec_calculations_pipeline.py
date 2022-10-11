@@ -7,22 +7,23 @@ from bamboo_lib.connectors.models import Connector
 from bamboo_lib.models import EasyPipeline, PipelineStep, Parameter
 from bamboo_lib.steps import LoadStep
 from bamboo_lib.logger import logger
+import os
 
-
+oec_token = os.environ['OEC_TOKEN']
 
 class DownloadStep(PipelineStep):
     def run_step(self, prev, params):
         # Get data directly form the OEC
         logger.info("Downloading: from OEC...")
-        df_between_AGA_initial = pd.DataFrame(r.get('https://oec.world/olap-proxy/data.jsonrecords?Exporter+Country=asarm%2Casaze%2Casgeo&Importer+Country=asarm%2Casaze%2Casgeo&Year=2017%2C2018%2C2019%2C2020&cube=trade_i_baci_a_92&drilldowns=Exporter+Country%2CHS4%2CImporter+Country&measures=Trade+Value&token=f24460fbd84d519342d4e5047faafe91').json()['data'])
+        df_between_AGA_initial = pd.DataFrame(r.get('https://oec.world/olap-proxy/data.jsonrecords?Exporter+Country=asarm%2Casaze%2Casgeo&Importer+Country=asarm%2Casaze%2Casgeo&Year=2017%2C2018%2C2019%2C2020&cube=trade_i_baci_a_92&drilldowns=Exporter+Country%2CHS4%2CImporter+Country&measures=Trade+Value&token={}'.format(oec_token)).json()['data'])
         df_between_AGA_initial
 
 
-        df_international_initial = pd.DataFrame(r.get('https://oec.world/olap-proxy/data.jsonrecords?Year=2017%2C2018%2C2019%2C2020&cube=trade_i_baci_a_92&drilldowns=Exporter+Country%2CHS4&measures=Trade+Value&token=f24460fbd84d519342d4e5047faafe91').json()['data'])
+        df_international_initial = pd.DataFrame(r.get('https://oec.world/olap-proxy/data.jsonrecords?Year=2017%2C2018%2C2019%2C2020&cube=trade_i_baci_a_92&drilldowns=Exporter+Country%2CHS4&measures=Trade+Value&token={}'.formatoec_token)).json()['data'])
         df_international_initial = df_international_initial.pivot_table(values='Trade Value', index='Country ID', columns= 'HS4 ID', aggfunc=np.sum).reset_index()
 
 
-        df_indicators_initial = pd.DataFrame(r.get('https://oec.world/olap-proxy/data.jsonrecords?Indicator=NY.GDP.MKTP.PP.KD%2CNY.GDP.PCAP.PP.KD%2CSP.POP.TOTL&Year=2020&cube=indicators_i_wdi_a&drilldowns=Country%2CIndicator&measures=Measure&token=f24460fbd84d519342d4e5047faafe91').json()['data'])
+        df_indicators_initial = pd.DataFrame(r.get('https://oec.world/olap-proxy/data.jsonrecords?Indicator=NY.GDP.MKTP.PP.KD%2CNY.GDP.PCAP.PP.KD%2CSP.POP.TOTL&Year=2020&cube=indicators_i_wdi_a&drilldowns=Country%2CIndicator&measures=Measure&token={}'.format(oec_token)).json()['data'])
         df_indicators_initial = df_indicators_initial.pivot(index = 'Country ID',columns=['Indicator'], values = ['Measure'], ).reset_index()
         df_indicators_initial.columns = ['Country ID','GDP per capita, PPP (constant 2017 international $)','GDP, PPP (constant 2017 international $)', 'Population, total']
         logger.info("Processing Download...")
@@ -379,6 +380,17 @@ class ECPipeline(EasyPipeline):
                 pk = ['geo_id_1','geo_id_2', 'dataset','with_aga', 'with_oil'],
                 nullable_list=['similarity']
             )        
+
+        if params.get('calc') == 'op_gain':
+
+            dtype = {
+                'geo_id': 'String',
+                'hs4_id': 'UInt16',
+                'dataset': 'UInt16',
+                'with_aga': 'UInt16',
+                'with_oil': 'UInt16',
+                'op_gain': 'Float64',
+            }
 
         if params.get('calc') == 'op_gain':
 
