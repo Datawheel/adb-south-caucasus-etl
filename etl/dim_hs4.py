@@ -11,6 +11,14 @@ class ProductStep(PipelineStep):
     def run_step(self, prev_result, params):
         oec = OEC()
 
+        # Section
+        payload_section = {
+            'cube': 'trade_i_baci_a_92',
+            'level': 'Section'
+        }
+        df_section = oec.get_members(payload=payload_section)
+        df_section.columns = ['section','section_name']
+
         # HS2
         payload_hs2 = {
             'cube': 'trade_i_baci_a_92',
@@ -47,7 +55,12 @@ class ProductStep(PipelineStep):
         df.columns = ["hs2_id", "hs2","hs4_id", "hs4"]
 
         df = df.groupby(by = ['hs2_id','hs2', 'hs4_id', 'hs4']).sum().reset_index()
-        
+
+        df['section_id'] = df['hs2_id'].apply(lambda id: int(str(id)[:-2]))
+
+        df = pd.merge(df, df_section, left_on='section_id', right_on='section', how='inner')
+        df = df.drop('section', axis=1)
+        df = df.rename(columns={'section_name': 'section'})
         return df
 
 
@@ -62,6 +75,8 @@ class ProductPipeline(EasyPipeline):
         db_connector = Connector.fetch('clickhouse-database', open('../conns.yaml'))
 
         dtype = {
+            "section_id": "UInt64",
+            "section": "String",
             "hs2_id":   "UInt16",
             "hs2":      "String",
             "hs4_id":   "UInt16",

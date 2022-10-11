@@ -13,6 +13,15 @@ class ProductStep(PipelineStep):
 
         oec = OEC()
 
+
+        # Section
+        payload_section = {
+            'cube': 'trade_i_baci_a_92',
+            'level': 'Section'
+        }
+        df_section = oec.get_members(payload=payload_section)
+        df_section.columns = ['section','section_name']
+
         # HS2
         payload_hs2 = {
             'cube': 'trade_i_baci_a_92',
@@ -48,6 +57,13 @@ class ProductStep(PipelineStep):
         df = df[["hs2", "hs2_name","hs4", "hs4_name","hs6", "hs6_name"]]
         # Rename cols
         df.columns = ['hs2_id', 'hs2', 'hs4_id', 'hs4', 'hs6_id', 'hs6']
+
+
+        df['section_id'] = df['hs2_id'].apply(lambda id: int(str(id)[:-2]))
+        df = pd.merge(df, df_section, left_on='section_id', right_on='section', how='inner')
+        df = df.drop('section', axis=1)
+        df = df.rename(columns={'section_name': 'section'})
+
         return df
 
 
@@ -64,11 +80,13 @@ class ProductPipeline(EasyPipeline):
         db_connector = Connector.fetch('clickhouse-database', open('../conns.yaml'))
 
         dtype = {
-            "hs2_id": "Int64",
+            "section_id": "UInt64",
+            "section": "String",
+            "hs2_id": "UInt64",
             "hs2": "String",
-            "hs4_id": "Int64",
+            "hs4_id": "UInt64",
             "hs4": "String",
-            "hs6_id": "Int64",
+            "hs6_id": "UInt64",
             "hs6": "String",
 
         }
@@ -80,7 +98,7 @@ class ProductPipeline(EasyPipeline):
             db_connector,
             if_exists = 'drop',
             dtype = dtype,
-            pk = ['hs2_id','hs4_id','hs6_id'],
+            pk = ['hs6_id'],
             # nullable_list=['']
         )        
         return [product_step, load_step]   
