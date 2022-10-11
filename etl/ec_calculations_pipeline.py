@@ -19,7 +19,7 @@ class DownloadStep(PipelineStep):
         df_between_AGA_initial
 
 
-        df_international_initial = pd.DataFrame(r.get('https://oec.world/olap-proxy/data.jsonrecords?Year=2017%2C2018%2C2019%2C2020&cube=trade_i_baci_a_92&drilldowns=Exporter+Country%2CHS4&measures=Trade+Value&token={}'.formatoec_token)).json()['data'])
+        df_international_initial = pd.DataFrame(r.get('https://oec.world/olap-proxy/data.jsonrecords?Year=2017%2C2018%2C2019%2C2020&cube=trade_i_baci_a_92&drilldowns=Exporter+Country%2CHS4&measures=Trade+Value&token={}'.format(oec_token)).json()['data'])
         df_international_initial = df_international_initial.pivot_table(values='Trade Value', index='Country ID', columns= 'HS4 ID', aggfunc=np.sum).reset_index()
 
 
@@ -157,7 +157,7 @@ class ECStep(PipelineStep):
         df_proximity = pd.DataFrame() # LOGIC LAYER
         df_relatedness = pd.DataFrame() # |geo_id | hs4_id | method | with_oil | relatedness
         df_op_gain = pd.DataFrame() # |geo_id | hs4_id | method | with_oil | op_gain
-
+        df_similarity = pd.DataFrame()
 
         for df,metadata in df_dict.items():
             df = metadata[0].copy()
@@ -220,7 +220,7 @@ class ECStep(PipelineStep):
         df_pci = df_pci.reset_index(drop = True)
         df_relatedness = df_relatedness.reset_index(drop = True)
         df_proximity = df_proximity.reset_index(drop = True)
-        df_similarity = df_similarity.reset_index(drop = True)
+        df_similarity = df_similarity.reset_index(drop = True).rename(columns= {'oec_id_1': 'geo_id_1', 'oec_id_2': 'geo_id_2'})
         df_op_gain = df_op_gain.reset_index(drop = True)
         logger.info("Calculations Ready")
 
@@ -422,7 +422,6 @@ class ECPipeline(EasyPipeline):
 
 if __name__ == "__main__":
     pp = ECPipeline()
-    # list_calcs = ['rca', 'eci', 'pci', 'relatedness', 'op_gain']
-    list_calcs = ['proximity', 'similarity']
+    list_calcs = ['rca', 'eci', 'pci', 'relatedness', 'op_gain','proximity', 'similarity']
     for i in list_calcs:
         pp.run({'calc': i})
