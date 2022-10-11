@@ -155,6 +155,7 @@ class ECStep(PipelineStep):
         df_eci = pd.DataFrame() # |geo_id | method | with_oil | eci|
         df_pci = pd.DataFrame() # |hs4_id | method | with_oil | pci|
         df_proximity = pd.DataFrame() # LOGIC LAYER
+        df_similarity = pd.DataFrame()
         df_relatedness = pd.DataFrame() # |geo_id | hs4_id | method | with_oil | relatedness
         df_op_gain = pd.DataFrame() # |geo_id | hs4_id | method | with_oil | op_gain
 
