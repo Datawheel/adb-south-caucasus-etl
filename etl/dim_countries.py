@@ -19,12 +19,12 @@ class CountriesStep(PipelineStep):
         }
         df = oec.get_members(payload=payload)
 
-        df['iso_3'] = df['id'].str.slice(start=2).str.upper()
+        df['iso_3'] = df['id'].str.slice(start=2).str.lower()
 
         df = df[['id','label', 'iso_3']]
         df.columns = ['oec_id','comtrade_name', 'iso_3']
 
-        df.loc[len(df.index) - 1] = ['asscr','South Caucasus Region','SCR']
+        df.loc[len(df.index) - 1] = ['asscr','South Caucasus Region','scr']
 
         return df
 
