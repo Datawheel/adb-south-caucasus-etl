@@ -24,7 +24,7 @@ class CountriesStep(PipelineStep):
         df = df[['id','label', 'iso_3']]
         df.columns = ['oec_id','comtrade_name', 'iso_3']
 
-        df.loc[len(df.index) - 1] = ['AGA','Armenia Georgia Azerbaijan','aga']
+        df.loc[len(df.index) - 1] = ['asscr','South Caucasus Region','SCR']
 
         return df
 

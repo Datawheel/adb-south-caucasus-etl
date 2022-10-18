@@ -15,8 +15,8 @@ class DownloadStep(PipelineStep):
     def run_step(self, prev, params):
         # Get data directly form the OEC
         logger.info("Downloading: from OEC...")
-        df_between_AGA_initial = pd.DataFrame(r.get('https://oec.world/olap-proxy/data.jsonrecords?Exporter+Country=asarm%2Casaze%2Casgeo&Importer+Country=asarm%2Casaze%2Casgeo&Year=2017%2C2018%2C2019%2C2020&cube=trade_i_baci_a_92&drilldowns=Exporter+Country%2CHS4%2CImporter+Country&measures=Trade+Value&token={}'.format(oec_token)).json()['data'])
-        df_between_AGA_initial
+        df_between_SCR_initial = pd.DataFrame(r.get('https://oec.world/olap-proxy/data.jsonrecords?Exporter+Country=asarm%2Casaze%2Casgeo&Importer+Country=asarm%2Casaze%2Casgeo&Year=2017%2C2018%2C2019%2C2020&cube=trade_i_baci_a_92&drilldowns=Exporter+Country%2CHS4%2CImporter+Country&measures=Trade+Value&token={}'.format(oec_token)).json()['data'])
+        df_between_SCR_initial
 
 
         df_international_initial = pd.DataFrame(r.get('https://oec.world/olap-proxy/data.jsonrecords?Year=2017%2C2018%2C2019%2C2020&cube=trade_i_baci_a_92&drilldowns=Exporter+Country%2CHS4&measures=Trade+Value&token={}'.format(oec_token)).json()['data'])
@@ -30,35 +30,35 @@ class DownloadStep(PipelineStep):
 
         # Make copies
         df_all_countries = df_international_initial.copy()
-        df_between_AGA = df_between_AGA_initial.copy()
+        df_between_SCR = df_between_SCR_initial.copy()
         df_indicators = df_indicators_initial.copy()
 
         # Fill NaNs with 0
         df_all_countries = df_all_countries.fillna(0)
-        df_between_AGA = df_between_AGA.fillna(0)
+        df_between_SCR = df_between_SCR.fillna(0)
         df_indicators = df_indicators.fillna(0)
 
-        # Add AGA as country 
-        df_3aga = df_all_countries[(df_all_countries['Country ID']=='asgeo') | (df_all_countries['Country ID']=='asarm') | (df_all_countries['Country ID']=='asaze')]
-        df_aga= df_3aga.replace({'Country ID': {'asarm':'AGA', 'asgeo':'AGA', 'asaze':'AGA'}}).groupby('Country ID', sort=False).sum().reset_index()
-        df_all_countries = df_all_countries.append(df_aga)
+        # Add SCR as country 
+        df_3scr = df_all_countries[(df_all_countries['Country ID']=='asgeo') | (df_all_countries['Country ID']=='asarm') | (df_all_countries['Country ID']=='asaze')]
+        df_scr= df_3scr.replace({'Country ID': {'asarm':'asscr', 'asgeo':'asscr', 'asaze':'asscr'}}).groupby('Country ID', sort=False).sum().reset_index()
+        df_all_countries = df_all_countries.append(df_scr)
 
-        # Remove the trade betweeen AGA
-        df_between_AGA_per_prod = df_between_AGA.drop(columns=['Exporter Country ID', 'Exporter Country','Importer Country ID','Importer Country','HS4']).groupby('HS4 ID').sum().reset_index()
+        # Remove the trade betweeen SCR
+        df_between_SCR_per_prod = df_between_SCR.drop(columns=['Exporter Country ID', 'Exporter Country','Importer Country ID','Importer Country','HS4']).groupby('HS4 ID').sum().reset_index()
         df_all_countries = df_all_countries.set_index('Country ID')
-        for prod in set(df_between_AGA_per_prod['HS4 ID']).intersection(set(df_all_countries.columns)):
-            df_all_countries.loc['AGA',prod] = df_all_countries.loc['AGA',prod] - df_between_AGA_per_prod[df_between_AGA_per_prod['HS4 ID']==prod]['Trade Value'].values[0]
+        for prod in set(df_between_SCR_per_prod['HS4 ID']).intersection(set(df_all_countries.columns)):
+            df_all_countries.loc['asscr',prod] = df_all_countries.loc['asscr',prod] - df_between_SCR_per_prod[df_between_SCR_per_prod['HS4 ID']==prod]['Trade Value'].values[0]
         df_all_countries = df_all_countries.reset_index()
 
-        # Calculate and Add AGA to indicators 
-        aga_pop_2020 = df_indicators[df_indicators['Country ID']=='asarm']['Population, total'].values[0]\
+        # Calculate and Add SCR to indicators 
+        scr_pop_2020 = df_indicators[df_indicators['Country ID']=='asarm']['Population, total'].values[0]\
                     + df_indicators[df_indicators['Country ID']=='asgeo']['Population, total'].values[0]\
                     + df_indicators[df_indicators['Country ID']=='asaze']['Population, total'].values[0]
-        aga_gdp_2020 = df_indicators[df_indicators['Country ID']=='asarm']['GDP, PPP (constant 2017 international $)'].values[0]\
+        scr_gdp_2020 = df_indicators[df_indicators['Country ID']=='asarm']['GDP, PPP (constant 2017 international $)'].values[0]\
                     + df_indicators[df_indicators['Country ID']=='asgeo']['GDP, PPP (constant 2017 international $)'].values[0]\
                     + df_indicators[df_indicators['Country ID']=='asaze']['GDP, PPP (constant 2017 international $)'].values[0]
-        aga_gdp_per_cap = aga_gdp_2020/aga_pop_2020
-        df_indicators = df_indicators.append({'Country ID':'AGA', 'GDP, PPP (constant 2017 international $)':aga_gdp_2020, 'GDP per capita, PPP (constant 2017 international $)':aga_gdp_per_cap, 'Population, total':aga_pop_2020}, ignore_index=True)
+        scr_gdp_per_cap = scr_gdp_2020/scr_pop_2020
+        df_indicators = df_indicators.append({'Country ID':'asscr', 'GDP, PPP (constant 2017 international $)':scr_gdp_2020, 'GDP per capita, PPP (constant 2017 international $)':scr_gdp_per_cap, 'Population, total':scr_pop_2020}, ignore_index=True)
 
 
         # Drop low products
@@ -87,14 +87,14 @@ class DownloadStep(PipelineStep):
 
         # Separate into 4 countries
 
-        df_countries = df_all_countries[~(df_all_countries['Country ID']=='AGA')].copy()
+        df_countries = df_all_countries[~(df_all_countries['Country ID']=='asscr')].copy()
         df_countries_no_oil = df_countries.copy()
 
-        df_countries_aga = df_all_countries[~((df_all_countries['Country ID']=='asarm') | (df_all_countries['Country ID']=='asaze') | (df_all_countries['Country ID']=='asgeo'))].copy()
-        df_countries_aga_no_oil = df_countries_aga.copy()
+        df_countries_scr = df_all_countries[~((df_all_countries['Country ID']=='asarm') | (df_all_countries['Country ID']=='asaze') | (df_all_countries['Country ID']=='asgeo'))].copy()
+        df_countries_scr_no_oil = df_countries_scr.copy()
 
         df_countries_no_oil = df_countries_no_oil.set_index('Country ID')
-        df_countries_aga_no_oil = df_countries_aga_no_oil.set_index('Country ID')
+        df_countries_scr_no_oil = df_countries_scr_no_oil.set_index('Country ID')
 
 
         # 52705	Non-Petroleum Gas
@@ -117,17 +117,17 @@ class DownloadStep(PipelineStep):
             df_countries_no_oil.loc['asgeo',prod] = 0
             df_countries_no_oil.loc['asaze',prod] = 0
 
-            df_countries_aga_no_oil.loc['AGA',prod] = 0
+            df_countries_scr_no_oil.loc['asscr',prod] = 0
 
         df_countries_no_oil = df_countries_no_oil.reset_index()
-        df_countries_aga_no_oil = df_countries_aga_no_oil.reset_index()
+        df_countries_scr_no_oil = df_countries_scr_no_oil.reset_index()
         logger.info("Download Ready")
 
-        return df_countries, df_countries_no_oil, df_countries_aga, df_countries_aga_no_oil
+        return df_countries, df_countries_no_oil, df_countries_scr, df_countries_scr_no_oil
 
 class ECStep(PipelineStep):
     def run_step(self, prev_result, params):
-        df_countries, df_countries_no_oil, df_countries_aga, df_countries_aga_no_oil = prev_result
+        df_countries, df_countries_no_oil, df_countries_scr, df_countries_scr_no_oil = prev_result
         logger.info("Calculating {}...".format(params.get('calc')))
         def export_similarity_index(rca):    
             rca = np.log(rca + 1)
@@ -143,11 +143,11 @@ class ECStep(PipelineStep):
             return scc
         
         df_dict = {
-                # [dataframe, with_aga, with_oil] 
+                # [dataframe, with_scr, with_oil] 
                 'countries': [df_countries.reset_index(drop = True), 0, 0, 1],
                 'countries_no_oil': [df_countries_no_oil.reset_index(drop = True), 1,0, 0],
-                'countries_aga': [df_countries_aga.reset_index(drop = True), 2,1, 1],
-                'countries_aga_no_oil': [df_countries_aga_no_oil.reset_index(drop = True), 3, 1, 0]
+                'countries_scr': [df_countries_scr.reset_index(drop = True), 2,1, 1],
+                'countries_scr_no_oil': [df_countries_scr_no_oil.reset_index(drop = True), 3, 1, 0]
         }
 
 
@@ -162,7 +162,7 @@ class ECStep(PipelineStep):
         for df,metadata in df_dict.items():
             df = metadata[0].copy()
             dataset = metadata[1]
-            with_aga = metadata[2]
+            with_scr = metadata[2]
             with_oil = metadata[3]
 
             rca = ec.rca(df.set_index('Country ID'))
@@ -174,37 +174,37 @@ class ECStep(PipelineStep):
 
             rca = rca.reset_index().melt(id_vars = 'Country ID', value_vars = rca.columns, value_name = 'rca').rename(columns = {'Country ID':'geo_id', 'HS4 ID':'hs4_id', 'rca':'rca'})
 
-            rca['with_aga'] = with_aga
+            rca['with_scr'] = with_scr
             rca['with_oil'] = with_oil
             df_rca = pd.concat([df_rca, rca])
 
             eci = eci_value.to_frame(name = 'eci').sort_values(by = 'eci',ascending=False).reset_index().rename(columns = {'Country ID':'geo_id'})
-            eci['with_aga'] = with_aga
+            eci['with_scr'] = with_scr
             eci['with_oil'] = with_oil
             df_eci = pd.concat([df_eci, eci])
 
             pci = pci_value.to_frame(name = 'pci').sort_values(by= 'pci',ascending=False).reset_index().rename(columns = {'HS4 ID':'hs4_id'})
-            pci['with_aga'] = with_aga
+            pci['with_scr'] = with_scr
             pci['with_oil'] = with_oil
             df_pci = pd.concat([df_pci, pci])
 
             relatedness = relatedness.stack().reset_index().rename(columns={'Country ID': 'geo_id', 'HS4 ID': 'hs4_id', 0: 'relatedness'}).sort_values(by = 'relatedness',ascending=False).reset_index(drop=True)
-            relatedness['with_aga'] = with_aga
+            relatedness['with_scr'] = with_scr
             relatedness['with_oil'] = with_oil
             df_relatedness = pd.concat([df_relatedness, relatedness])
 
             proximity = proximity.stack().to_frame().reset_index(level=1).rename(columns = {'HS4 ID': 'hs4_id_2', 0:'proximity'}).reset_index().rename(columns = {'HS4 ID': 'hs4_id_1'}).sort_values(by='proximity', ascending = False).reset_index(drop =True)
-            proximity['with_aga'] = with_aga
+            proximity['with_scr'] = with_scr
             proximity['with_oil'] = with_oil
             df_proximity = pd.concat([df_proximity, proximity])
             
             similarity = similarity
-            similarity['with_aga'] = with_aga
+            similarity['with_scr'] = with_scr
             similarity['with_oil'] = with_oil    
             df_similarity = pd.concat([df_similarity, similarity])
 
             op_gain = op_gain.stack().reset_index().rename(columns={'Country ID': 'geo_id', 'HS4 ID': 'hs4_id', 0: 'op_gain'}).sort_values(by = 'op_gain',ascending=False).reset_index(drop=True)
-            op_gain['with_aga'] = with_aga
+            op_gain['with_scr'] = with_scr
             op_gain['with_oil'] = with_oil
             df_op_gain = pd.concat([df_op_gain, op_gain])
 
@@ -264,7 +264,7 @@ class ECPipeline(EasyPipeline):
             dtype = {
                 'geo_id': 'String',
                 'hs4_id': 'UInt32',
-                'with_aga': 'UInt16',
+                'with_scr': 'UInt16',
                 'with_oil': 'UInt16',
                 'rca': 'Float64',
             }
@@ -274,7 +274,7 @@ class ECPipeline(EasyPipeline):
                 db_connector,
                 if_exists = 'append',
                 dtype = dtype,
-                pk = ['geo_id', 'hs4_id', 'with_aga', 'with_oil'],
+                pk = ['geo_id', 'hs4_id', 'with_scr', 'with_oil'],
                 nullable_list=['rca']
             )        
 
@@ -282,7 +282,7 @@ class ECPipeline(EasyPipeline):
             dtype = {
                 'geo_id': 'String',
                 'eci': 'Float64',
-                'with_aga': 'UInt16',
+                'with_scr': 'UInt16',
                 'with_oil': 'UInt16',
             }
 
@@ -291,7 +291,7 @@ class ECPipeline(EasyPipeline):
                 db_connector,
                 if_exists = 'append',
                 dtype = dtype,
-                pk = ['geo_id', 'with_aga', 'with_oil'],
+                pk = ['geo_id', 'with_scr', 'with_oil'],
                 nullable_list=['eci']
             )        
 
@@ -300,7 +300,7 @@ class ECPipeline(EasyPipeline):
             dtype = {
                 'hs4_id': 'UInt32',
                 'pci': 'Float64',
-                'with_aga': 'UInt16',
+                'with_scr': 'UInt16',
                 'with_oil': 'UInt16',
             }
 
@@ -309,7 +309,7 @@ class ECPipeline(EasyPipeline):
                 db_connector,
                 if_exists = 'append',
                 dtype = dtype,
-                pk = ['hs4_id', 'with_aga', 'with_oil'],
+                pk = ['hs4_id', 'with_scr', 'with_oil'],
                 nullable_list=['pci']
             )        
         
@@ -317,7 +317,7 @@ class ECPipeline(EasyPipeline):
             dtype = {
                 'geo_id': 'String',
                 'hs4_id': 'UInt32',
-                'with_aga': 'UInt16',
+                'with_scr': 'UInt16',
                 'with_oil': 'UInt16',
                 'relatedness': 'Float64',
             }
@@ -327,7 +327,7 @@ class ECPipeline(EasyPipeline):
                 db_connector,
                 if_exists = 'append',
                 dtype = dtype,
-                pk = ['geo_id', 'hs4_id', 'with_aga', 'with_oil'],
+                pk = ['geo_id', 'hs4_id', 'with_scr', 'with_oil'],
                 nullable_list=['relatedness']
             )        
         
@@ -337,7 +337,7 @@ class ECPipeline(EasyPipeline):
                 'hs4_id_1': 'UInt32',
                 'hs4_id_2': 'UInt32',
                 'proximity': 'Float64',
-                'with_aga': 'UInt16',
+                'with_scr': 'UInt16',
                 'with_oil': 'UInt16',
             }
 
@@ -346,7 +346,7 @@ class ECPipeline(EasyPipeline):
                 db_connector,
                 if_exists = 'append',
                 dtype = dtype,
-                pk = ['hs4_id_1','hs4_id_2','with_aga', 'with_oil'],
+                pk = ['hs4_id_1','hs4_id_2','with_scr', 'with_oil'],
                 nullable_list=['proximity']
             )        
 
@@ -356,7 +356,7 @@ class ECPipeline(EasyPipeline):
                 'geo_id_1': 'String',
                 'geo_id_2': 'String',
                 'similarity': 'Float64',
-                'with_aga': 'UInt16',
+                'with_scr': 'UInt16',
                 'with_oil': 'UInt16',
             }
 
@@ -365,7 +365,7 @@ class ECPipeline(EasyPipeline):
                 db_connector,
                 if_exists = 'append',
                 dtype = dtype,
-                pk = ['geo_id_1','geo_id_2','with_aga', 'with_oil'],
+                pk = ['geo_id_1','geo_id_2','with_scr', 'with_oil'],
                 nullable_list=['similarity']
             )        
 
@@ -374,7 +374,7 @@ class ECPipeline(EasyPipeline):
             dtype = {
                 'geo_id': 'String',
                 'hs4_id': 'UInt32',
-                'with_aga': 'UInt16',
+                'with_scr': 'UInt16',
                 'with_oil': 'UInt16',
                 'op_gain': 'Float64',
             }
@@ -384,7 +384,7 @@ class ECPipeline(EasyPipeline):
             dtype = {
                 'geo_id': 'String',
                 'hs4_id': 'UInt32',
-                'with_aga': 'UInt16',
+                'with_scr': 'UInt16',
                 'with_oil': 'UInt16',
                 'op_gain': 'Float64',
             }
@@ -394,7 +394,7 @@ class ECPipeline(EasyPipeline):
                 db_connector,
                 if_exists = 'append',
                 dtype = dtype,
-                pk = ['geo_id', 'hs4_id', 'with_aga', 'with_oil'],
+                pk = ['geo_id', 'hs4_id', 'with_scr', 'with_oil'],
                 nullable_list=['op_gain']
             )        
 
