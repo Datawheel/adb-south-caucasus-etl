@@ -163,7 +163,7 @@ class ExportsPipeline(EasyPipeline):
         }
 
         load_step = LoadStep(
-            'exports_scr',
+            'exports',
             db_connector,
             if_exists = 'drop',
             dtype = dtype,
