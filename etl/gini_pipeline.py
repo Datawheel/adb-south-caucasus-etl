@@ -15,7 +15,6 @@ class ReadStep(PipelineStep):
         df = pd.read_csv("data/gini.csv")
 
         df = df.set_index('geo_id')
-        df.loc['scr'] = df.loc['aga']
         df = df.drop(['abu', 'aga'])
         df = df.reset_index()
 
