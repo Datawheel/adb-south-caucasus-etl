@@ -1,5 +1,7 @@
 import pandas as pd
 from modules.oec import OEC
+from modules.peii import peii as ec_peii
+from modules.pgi import pgi as ec_pgi
 import requests as r
 import numpy as np 
 import economic_complexity as ec
@@ -150,6 +152,22 @@ class ECStep(PipelineStep):
                 'countries_scr_no_oil': [df_countries_scr_no_oil.reset_index(drop = True), 3, 1, 0]
         }
 
+        if params.get('calc') == 'pgi':
+            # Retrieve gini
+            gini_url  = 'https://adb.datawheel.us/tesseract/data.jsonrecords?cube=Gini&drilldowns=Exporter&measures=Gini+Index'
+            gini_df_url = pd.DataFrame(r.get(gini_url).json()['data'])
+            gini_df = gini_df_url.copy()
+            gini_df.columns = gini_df.columns.map(lambda x: x.replace(' ', '_').lower())
+            gini_df = gini_df.drop(columns=['exporter'])
+            gini_df = gini_df.set_index('exporter_id')
+        if params.get('calc') == 'peii':
+            # Retrieve emissions
+            emissions_url = 'https://adb.datawheel.us/tesseract/data.jsonrecords?cube=Emissions&drilldowns=Exporter&measures=Emissions'
+            emissions_df_url = pd.DataFrame(r.get(emissions_url).json()['data'])
+            emissions_df = emissions_df_url.copy()
+            emissions_df.columns = emissions_df.columns.map(lambda x: x.replace(' ', '_').lower())
+            emissions_df = emissions_df.drop(columns=['exporter'])
+            emissions_df = emissions_df.set_index('exporter_id')
 
         df_rca = pd.DataFrame() # |geo_id | hs4_id | method | with_oil | rca
         df_eci = pd.DataFrame() # |geo_id | method | with_oil | eci|
@@ -158,6 +176,8 @@ class ECStep(PipelineStep):
         df_relatedness = pd.DataFrame() # |geo_id | hs4_id | method | with_oil | relatedness
         df_op_gain = pd.DataFrame() # |geo_id | hs4_id | method | with_oil | op_gain
         df_similarity = pd.DataFrame()
+        df_pgi = pd.DataFrame()
+        df_peii = pd.DataFrame()
 
         for df,metadata in df_dict.items():
             df = metadata[0].copy()
@@ -173,6 +193,22 @@ class ECStep(PipelineStep):
             op_gain = ec.opportunity_gain(rcas = rca, proximities=proximity, pci = pci_value)
 
             rca = rca.reset_index().melt(id_vars = 'Country ID', value_vars = rca.columns, value_name = 'rca').rename(columns = {'Country ID':'geo_id', 'HS4 ID':'hs4_id', 'rca':'rca'})
+
+
+            if params.get('calc') == 'pgi':
+                pgi = ec_pgi(df.set_index("Country ID"), gini_df)
+                pgi = pgi.reset_index()
+                pgi['with_oil'] = with_oil
+                pgi['with_scr'] = with_scr
+                df_pgi = pd.concat([df_pgi, pgi])
+
+            
+            if params.get('calc') == 'peii':
+                peii = ec_peii(df.set_index("Country ID"), emissions_df)
+                peii = peii.reset_index()
+                peii['with_oil'] = with_oil
+                peii['with_scr'] = with_scr
+                df_peii = pd.concat([df_peii, peii])
 
             rca['with_scr'] = with_scr
             rca['with_oil'] = with_oil
@@ -216,6 +252,16 @@ class ECStep(PipelineStep):
         df_proximity = df_proximity.reset_index(drop = True)
         df_similarity = df_similarity.reset_index(drop = True).rename(columns= {'oec_id_1': 'geo_id_1', 'oec_id_2': 'geo_id_2'})
         df_op_gain = df_op_gain.reset_index(drop = True)
+        
+        if params.get('calc') == 'pgi':
+            df_pgi = df_pgi.reset_index(drop = True)
+            df_pgi.columns = ['hs4_id', 'pgi', 'with_oil', 'with_scr' ]
+            
+        
+        if params.get('calc') == 'peii':
+            df_peii = df_peii.reset_index(drop = True)
+            df_peii.columns = ['hs4_id', 'peii', 'with_oil', 'with_scr']
+        
         logger.info("Calculations Ready")
 
 
@@ -242,7 +288,10 @@ class ECStep(PipelineStep):
         
         if params.get('calc') == 'op_gain':
             return(df_op_gain)
-        
+        if params.get('calc') == 'pgi':
+            return(df_pgi)
+        if params.get('calc') == 'peii':
+            return(df_peii)
 
 
 
@@ -398,6 +447,43 @@ class ECPipeline(EasyPipeline):
                 nullable_list=['op_gain']
             )        
 
+        if params.get('calc') == 'pgi':
+
+            dtype = {
+                'hs4_id': 'UInt32',
+                'with_oil': 'UInt16',
+                'with_scr': 'UInt16',
+                'pgi': 'Float64',
+            }
+
+            load_step = LoadStep(
+                'pgi',
+                db_connector,
+                if_exists = 'drop',
+                dtype = dtype,
+                pk = ['hs4_id', 'with_oil', 'with_scr'],
+                nullable_list=['pgi']
+            )        
+
+
+        if params.get('calc') == 'peii':
+
+            dtype = {
+                'hs4_id': 'UInt32',
+                'with_oil': 'UInt16',
+                'with_scr': 'UInt16',
+                'peii': 'Float64',
+            }
+
+            load_step = LoadStep(
+                'peii',
+                db_connector,
+                if_exists = 'drop',
+                dtype = dtype,
+                pk = ['hs4_id', 'with_oil', 'with_scr'],
+                nullable_list=['peii']
+            )        
+
         download = DownloadStep()
         ec = ECStep()
 
@@ -408,6 +494,9 @@ class ECPipeline(EasyPipeline):
 
 if __name__ == "__main__":
     pp = ECPipeline()
-    list_calcs = ['rca', 'eci', 'pci', 'relatedness', 'op_gain','proximity', 'similarity']
+    list_calcs = [
+        # 'rca', 'eci', 'pci', 'relatedness', 'op_gain','proximity', 'similarity',
+        'pgi', 'peii'
+        ]
     for i in list_calcs:
         pp.run({'calc': i})
