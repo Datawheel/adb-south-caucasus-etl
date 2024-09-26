@@ -1,0 +1,13 @@
+data/
+results/
+
+*.ipynb
+*.csv
+
+.env
+__pycache__/
+
+.ipynb_checkpoints/
+
+*.DS_Store
+*.zip
